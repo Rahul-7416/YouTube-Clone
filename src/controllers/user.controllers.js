@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import User from "../models/user.model.js";
+import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 // registerUser
@@ -17,13 +17,14 @@ const registerUser = asyncHandler(async (req, res) => {
     // check for user creation
     // return response
 
-    // get user details from frontend
+    // Step1: get user details from frontend
+    // console.log(req.body); // Testing purpose
     const { fullName, email, username, password } = req.body; // generally, when we are passing the data in the form of JSON or form data -> we can access it through req.body
-    console.log("email: ", email);
+    // console.log("email: ", email); // Testing purpose
 
 
 
-    // validation -> to check that data received is not empty
+    // Step2: validation -> to check that data received is not empty
     if(
         [fullName, email, username, password].some((field) => 
         field.trim() === "")
@@ -33,7 +34,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
-    // check if user already exists: username, email
+    // Step3: check if user already exists: username, email
     const existedUser = await User.findOne({
         $or: [ { username }, { email } ]
     });
@@ -44,17 +45,23 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
-    // check for images, check for avatar,
+    // Step4: check for images, check for avatar,
     const avatarLocalPath = req.files?.avatar[0]?.path; // avatar[0] -> bracket notation of the Object
-    // console.log(req.files);
+    // console.log(req.files); // Testing purpose
 
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path; // this will give TypeError: Cannot read properties of undefined -> whenever we are using an optional chaining -> ?. -> always verify whether the data is received or not before proceeding any further
+
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path; // no need to implement partial check here -> as we have already checked everything in the if condition
+    }
 
     if(!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required");
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
+    // console.log(avatar); // Testing purpose
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
     if(!avatar) {
@@ -63,7 +70,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
-    // create user object - create entry in db
+    // Step5: create user object - create entry in db
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -75,8 +82,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
     
-    // remove password and refresh token field from response
-    // check for user creation
+    // Step6: remove password and refresh token field from response
+    // Step7: check for user creation
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     );
@@ -85,7 +92,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
 
-    // return res
+    // Step8: return res
     return res.status(201).json(
         new ApiResponse(200, createdUser, "User created successfully")
     );
