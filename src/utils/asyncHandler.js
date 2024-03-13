@@ -1,13 +1,14 @@
 // The function asyncHandler is a hihger order function which takes requestHandler as an argument
 // and return the requestHandler asynchronously 
 const asyncHandler = (requestHandler) => {
-    (req, res, next) => {
-        // This line wraps the invocation of the provided function fn with Promise.resolve(), 
-        // which ensures that the result of fn(req, res, next) is converted to a promise. 
+    return (req, res, next) => {
+        
+        // This line wraps the invocation of the provided function requestHandler with Promise.resolve(), 
+        // which ensures that the result of requestHandler(req, res, next) is converted to a promise. 
         // This is typically done to handle both synchronous and asynchronous functions uniformly.
         // As it becomes asynchronous in nature, now we can easily apply the chains of .then .catch etc
         Promise.resolve(requestHandler(req, res, next))
-        .catch((err) => next(err));
+        .catch((err) => next(err)); // This ensures that errors are properly propagated down the Express middleware chain.
     }
 }
 
