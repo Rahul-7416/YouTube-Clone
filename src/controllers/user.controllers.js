@@ -148,7 +148,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // Step4: password check
     const isPasswordValid = await user.isPasswordCorrect(password);
 
-    if (!password) {
+    if (!isPasswordValid) {
         throw new ApiError(401, "Invalid user credentials");
     }
 
@@ -160,7 +160,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Step6: send cookies
     const options = {
-        // we are setting these two as false -> so that the cookies can only be modified from the server and not from the user's browser 
+        // we are setting these two as true -> so that the cookies can only be modified from the server and not from the user's browser 
         httpOnly: true,
         secure: true,
     }
