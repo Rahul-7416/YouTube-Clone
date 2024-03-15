@@ -217,11 +217,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => { // NOTE: This is n
         if (!incomingRefreshToken) {
             throw new ApiError(401, "Unauthorized request")
         }
+        console.log(incomingRefreshToken);
     
         const decodedToken = jwt.verify(
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET,
         )
+        console.log(decodedToken?._id);
     
         const user = await User.findById(decodedToken?._id);
     
@@ -232,13 +234,15 @@ const refreshAccessToken = asyncHandler(async (req, res) => { // NOTE: This is n
         if (incomingRefreshToken !== user?.refreshToken) {
             throw new ApiError(401, "Refresh token is expired or used");
         }
+        console.log(user?._id);
     
         const options = {
             httpOnly: true,
             secure: true,
         }
     
-        const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+        console.log("newRefreshToken : ", newRefreshToken);
     
         return res
         .status(200)
